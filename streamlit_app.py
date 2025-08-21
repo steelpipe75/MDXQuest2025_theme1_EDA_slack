@@ -144,7 +144,7 @@ def app(dev_mode):
 if __name__ == "__main__":
     st.set_page_config(
         page_title="MDXQ2025 テーマ1 演習03 EDA 共有アプリ", layout="wide",
-        page_icon="	:computer:"
+        page_icon=":computer:"
     )
     st.title("MDXQ2025 テーマ1 演習03 EDA 共有アプリ")
 
