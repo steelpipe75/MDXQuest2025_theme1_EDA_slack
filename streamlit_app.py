@@ -154,12 +154,23 @@ def app(dev_mode):
         # test_dfに存在するが、2021年に売上がなかった商品IDを特定
         items_no_sales_2021 = list(test_items - sold_items_2021)
 
-        st.subheader("test_dfに存在するが、2021年に売上がなかった商品ID")
-        if items_no_sales_2021:
-            st.write("以下の商品IDはtest_dfに存在しますが、2021年の販売履歴がありませんでした:")
-            st.dataframe(pd.DataFrame(items_no_sales_2021, columns=['商品ID']))
-        else:
-            st.write("test_dfに存在する全ての商品IDは、2021年に販売履歴がありました。")
+        st.subheader("テストデータのうち、前年販売実績のない商品")
+        test_group_df = pd.DataFrame({'商品ID' : list(test_items)})
+        test_group_df["前年販売実績のない商品"] = False
+        test_group_df.loc[test_group_df["商品ID"].isin(items_no_sales_2021), "前年販売実績のない商品"] = True
+
+        test_group_df = pd.merge(test_group_df, item_categories_df, on=['商品ID'], how='left')
+        test_group_df = pd.merge(test_group_df, category_names_df, on=['商品カテゴリID'], how='left')
+
+        test_no_sales_df = test_group_df[test_group_df["前年販売実績のない商品"] == True]
+        test_no_sales_df = test_no_sales_df.drop(columns=["前年販売実績のない商品"])
+        st.dataframe(test_no_sales_df)
+
+        st.subheader("テストデータのうち、前年販売実績のある商品")
+        test_sales_df = test_group_df[test_group_df["前年販売実績のない商品"] == False]
+        test_sales_df = test_sales_df.drop(columns=["前年販売実績のない商品"])
+        st.dataframe(test_sales_df)
+
 
         # ---- AAA 計算処理 AAA ----
 
