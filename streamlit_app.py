@@ -136,6 +136,31 @@ def app(dev_mode):
         st.subheader("カテゴリ毎の売上個数が多い商品ID (DataFrame)")
         st.dataframe(sales_by_categories)
 
+        st.divider()
+
+        # test_dfに存在する商品IDのうち、sales_history_dfの2021年の売り上げがない商品をリストアップ
+        # '日付'カラムをdatetime型に変換
+        sales_history_df['日付'] = pd.to_datetime(sales_history_df['日付'])
+
+        # 2021年のデータのみを抽出
+        sales_2021_df = sales_history_df[sales_history_df['日付'].dt.year == 2021]
+
+        # 2021年に売上があった商品IDのセット
+        sold_items_2021 = set(sales_2021_df['商品ID'].unique())
+
+        # test_dfに存在する全ての商品IDのセット
+        test_items = set(test_df['商品ID'].unique())
+
+        # test_dfに存在するが、2021年に売上がなかった商品IDを特定
+        items_no_sales_2021 = list(test_items - sold_items_2021)
+
+        st.subheader("test_dfに存在するが、2021年に売上がなかった商品ID")
+        if items_no_sales_2021:
+            st.write("以下の商品IDはtest_dfに存在しますが、2021年の販売履歴がありませんでした:")
+            st.dataframe(pd.DataFrame(items_no_sales_2021, columns=['商品ID']))
+        else:
+            st.write("test_dfに存在する全ての商品IDは、2021年に販売履歴がありました。")
+
         # ---- AAA 計算処理 AAA ----
 
 
