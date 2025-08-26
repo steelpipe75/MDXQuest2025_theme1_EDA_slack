@@ -171,39 +171,6 @@ def app(dev_mode):
         test_sales_df = test_group_df[test_group_df["前年販売実績のない商品"] == False]
         test_sales_df = test_sales_df.drop(columns=["前年販売実績のない商品"])
         st.dataframe(test_sales_df)
-
-        st.divider()
-
-        shop_product_pair = test_df[['商品ID', '店舗ID']]
-
-        train_2021_months = pd.DataFrame({
-            '年': 2021,
-            '月': [ m for m in range(1, 13)],
-        })
-        train_2021_months
-
-        train_2022_months = pd.DataFrame({
-            '年': 2022,
-            '月': [ m for m in range(1, 11)],
-        })
-        train_2022_months
-
-        train_months = pd.concat([train_2021_months, train_2022_months])
-        train_months
-
-        full_train_df = shop_product_pair.merge(train_months, how='cross')
-
-        sales_history_df["年"] = sales_history_df['日付'].apply(lambda x: int(x.split('-')[0]))
-        sales_history_df["月"] = sales_history_df['日付'].apply(lambda x: int(x.split('-')[1]))
-
-        sales_by_month_df = sales_history_df.groupby(['商品ID', '店舗ID', '年', '月']).agg({'売上個数': 'sum', '商品価格': ['mean', 'median']}).reset_index()
-        sales_by_month_df.columns = ['商品ID', '店舗ID', '年', '月', '売上個数', '商品価格(平均)', '商品価格(中央値)']
-
-        full_train_df = pd.merge(full_train_df, sales_by_month_df, on=['商品ID', '店舗ID', '年', '月'], how='left')
-
-        pyg_app = StreamlitRenderer(full_train_df)
-        pyg_app.explorer()
-
         # ---- AAA 計算処理 AAA ----
 
 
