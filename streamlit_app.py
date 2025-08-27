@@ -87,25 +87,6 @@ def app(dev_mode):
             calc_enable = True
 
     if calc_enable:
-        submit_df = pd.read_csv(submit_file, header=None)
-        submit_df.columns = ['index', '予測']
-
-        work_df = pd.merge(test_df, submit_df)
-        work_df = pd.merge(work_df, item_categories_df, on=['商品ID'], how='left')
-        work_df = pd.merge(work_df, category_names_df, on=['商品カテゴリID'], how='left')
-
-        work_df = work_df[['商品ID', '店舗ID', '商品カテゴリID', '商品カテゴリ名', '予測']]
-        submit_graph_df = work_df[work_df['店舗ID'] == 0]
-        submit_graph_df.columns = ['商品ID', '店舗ID', '商品カテゴリID', '商品カテゴリ名', '店舗ID__0_予測']
-        submit_graph_df = submit_graph_df[['商品ID', '商品カテゴリID', '商品カテゴリ名', '店舗ID__0_予測']]
-
-        for i in range(1, 18):
-            submit_temp_df = work_df[work_df['店舗ID'] == i]
-            submit_temp_df[f'店舗ID_{str(i).rjust(2, '_')}_予測'] = submit_temp_df['予測']
-            submit_temp_df = submit_temp_df[['商品ID', f'店舗ID_{str(i).rjust(2, '_')}_予測']]
-
-            submit_graph_df = pd.merge(submit_graph_df, submit_temp_df, on=['商品ID'], how='left')
-
         # ---- VVV 計算処理 VVV ----
 
         # test_dfに存在する商品IDと店舗IDの組み合わせを抽出
@@ -180,24 +161,48 @@ def app(dev_mode):
         # test_dfに存在するが、2021年に売上がなかった商品IDを特定
         items_no_sales_2021 = list(test_items - sold_items_2021)
 
-        st.subheader("テストデータのうち、前年販売実績のない商品")
+        st.subheader("テストデータのうち、前年販売実績のある商品")
         test_group_df = pd.DataFrame({'商品ID' : list(test_items)})
-        test_group_df["前年販売実績のない商品"] = False
-        test_group_df.loc[test_group_df["商品ID"].isin(items_no_sales_2021), "前年販売実績のない商品"] = True
+        test_group_df['前年販売実績のある商品'] = True
+        test_group_df.loc[test_group_df['商品ID'].isin(items_no_sales_2021), '前年販売実績のある商品'] = False
 
         test_group_df = pd.merge(test_group_df, item_categories_df, on=['商品ID'], how='left')
         test_group_df = pd.merge(test_group_df, category_names_df, on=['商品カテゴリID'], how='left')
 
-        test_no_sales_df = test_group_df[test_group_df["前年販売実績のない商品"] == True]
-        test_no_sales_df = test_no_sales_df.drop(columns=["前年販売実績のない商品"])
+        test_no_sales_df = test_group_df[test_group_df['前年販売実績のある商品'] == True]
+        test_no_sales_df = test_no_sales_df.drop(columns=['前年販売実績のある商品'])
         st.dataframe(test_no_sales_df)
 
-        st.subheader("テストデータのうち、前年販売実績のある商品")
-        test_sales_df = test_group_df[test_group_df["前年販売実績のない商品"] == False]
-        test_sales_df = test_sales_df.drop(columns=["前年販売実績のない商品"])
+        st.subheader("テストデータのうち、前年販売実績のない商品")
+        test_sales_df = test_group_df[test_group_df['前年販売実績のある商品'] == False]
+        test_sales_df = test_sales_df.drop(columns=['前年販売実績のある商品'])
         st.dataframe(test_sales_df)
 
         st.divider()
+
+        submit_df = pd.read_csv(submit_file, header=None)
+        submit_df.columns = ['index', '予測']
+
+        work_df = pd.merge(test_df, submit_df)
+        work_df = pd.merge(work_df, item_categories_df, on=['商品ID'], how='left')
+        work_df = pd.merge(work_df, category_names_df, on=['商品カテゴリID'], how='left')
+
+        work_df = work_df[['商品ID', '店舗ID', '商品カテゴリID', '商品カテゴリ名', '予測']]
+        submit_graph_df = work_df[work_df['店舗ID'] == 0]
+        submit_graph_df['前年販売実績のある商品'] = True
+        submit_graph_df.loc[submit_graph_df['商品ID'].isin(items_no_sales_2021), '前年販売実績のある商品'] = False
+        submit_graph_df.columns = ['商品ID', '店舗ID', '商品カテゴリID', '商品カテゴリ名', '店舗ID__0_予測', '前年販売実績のある商品']
+        submit_graph_df = submit_graph_df[['商品ID', '前年販売実績のある商品', '商品カテゴリ名', '店舗ID__0_予測']]
+
+        for i in range(1, 18):
+            submit_temp_df = work_df[work_df['店舗ID'] == i].copy()
+            submit_temp_df[f'店舗ID_{str(i).rjust(2, '_')}_予測'] = submit_temp_df['予測']
+            submit_temp_df = submit_temp_df[['商品ID', f'店舗ID_{str(i).rjust(2, '_')}_予測']]
+
+            submit_graph_df = pd.merge(submit_graph_df, submit_temp_df, on=['商品ID'], how='left')
+
+        submit_graph_df['前年販売実績のある商品'] = True
+        submit_graph_df.loc[submit_graph_df['商品ID'].isin(items_no_sales_2021), '前年販売実績のある商品'] = False
 
         st.dataframe(submit_graph_df)
 
