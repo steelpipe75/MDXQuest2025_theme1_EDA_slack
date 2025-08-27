@@ -3,7 +3,6 @@ import os
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-from pygwalker.api.streamlit import StreamlitRenderer
 
 SALES_HISTORY_PATH = "./data/sales_history.csv"
 ITEM_CATEGORIES_PATH = "./data/item_categories.csv"
@@ -51,6 +50,11 @@ def app(dev_mode):
                     type="csv",
                 )
 
+    st.subheader("投稿データ")
+    submit_file = st.file_uploader(
+        "投稿ファイル(csv)をアップロード", type="csv"
+    )
+
     if dev_mode:
         sales_history_df = pd.read_csv(SALES_HISTORY_PATH)
         item_categories_df = pd.read_csv(ITEM_CATEGORIES_PATH)
@@ -75,12 +79,33 @@ def app(dev_mode):
             and item_categories_file is not None
             and category_names_file is not None
             and test_file is not None
+            and submit_file is not None
         ):
             calc_enable = True
     else:
-        calc_enable = True
+        if submit_file is not None:
+            calc_enable = True
 
     if calc_enable:
+        submit_df = pd.read_csv(submit_file, header=None)
+        submit_df.columns = ['index', '予測']
+
+        work_df = pd.merge(test_df, submit_df)
+        work_df = pd.merge(work_df, item_categories_df, on=['商品ID'], how='left')
+        work_df = pd.merge(work_df, category_names_df, on=['商品カテゴリID'], how='left')
+
+        work_df = work_df[['商品ID', '店舗ID', '商品カテゴリID', '商品カテゴリ名', '予測']]
+        submit_graph_df = work_df[work_df['店舗ID'] == 0]
+        submit_graph_df.columns = ['商品ID', '店舗ID', '商品カテゴリID', '商品カテゴリ名', '店舗ID__0_予測']
+        submit_graph_df = submit_graph_df[['商品ID', '商品カテゴリID', '商品カテゴリ名', '店舗ID__0_予測']]
+
+        for i in range(1, 18):
+            submit_temp_df = work_df[work_df['店舗ID'] == i]
+            submit_temp_df[f'店舗ID_{str(i).rjust(2, '_')}_予測'] = submit_temp_df['予測']
+            submit_temp_df = submit_temp_df[['商品ID', f'店舗ID_{str(i).rjust(2, '_')}_予測']]
+
+            submit_graph_df = pd.merge(submit_graph_df, submit_temp_df, on=['商品ID'], how='left')
+
         # ---- VVV 計算処理 VVV ----
 
         # test_dfに存在する商品IDと店舗IDの組み合わせを抽出
@@ -171,6 +196,11 @@ def app(dev_mode):
         test_sales_df = test_group_df[test_group_df["前年販売実績のない商品"] == False]
         test_sales_df = test_sales_df.drop(columns=["前年販売実績のない商品"])
         st.dataframe(test_sales_df)
+
+        st.divider()
+
+        st.dataframe(submit_graph_df)
+
         # ---- AAA 計算処理 AAA ----
 
 
