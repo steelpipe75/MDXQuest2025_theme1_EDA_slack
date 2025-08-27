@@ -189,6 +189,7 @@ def app(dev_mode):
 
         work_df = work_df[['商品ID', '店舗ID', '商品カテゴリID', '商品カテゴリ名', '予測']]
         submit_graph_df = work_df[work_df['店舗ID'] == 0]
+        submit_graph_df = submit_graph_df.copy()
         submit_graph_df['前年販売実績'] = "あり"
         submit_graph_df.loc[submit_graph_df['商品ID'].isin(items_no_sales_2021), '前年販売実績'] = "なし"
         submit_graph_df.columns = ['商品ID', '店舗ID', '商品カテゴリID', '商品カテゴリ名', '_0_予測', '前年販売実績']
