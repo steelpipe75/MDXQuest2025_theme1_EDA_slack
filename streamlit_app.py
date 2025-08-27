@@ -226,28 +226,6 @@ def app(dev_mode):
         )
         st.plotly_chart(fig_heatmap, use_container_width=True)
 
-        st.subheader("店舗ごとの商品ID別予測値 (Heatmap)")
-        
-        # ヒートマップ用にデータを整形
-        # '商品ID'をインデックスに設定
-        heatmap_df_item = submit_graph_df.set_index('商品ID')
-        
-        # 予測に関連する列のみを抽出
-        pred_cols_item = [col for col in heatmap_df_item.columns if '_予測' in col]
-        heatmap_df_item = heatmap_df_item[pred_cols_item]
-        
-        # 予測列の列名を店舗ID（数値）に修正
-        heatmap_df_item.columns = [col.replace('_予測', '').replace('_', '') for col in pred_cols_item]
-        
-        # Plotlyでヒートマップを作成
-        fig_heatmap_item = px.imshow(
-            heatmap_df_item,
-            labels=dict(x="店舗ID", y="商品ID", color="予測値"),
-            title="店舗ごとの商品ID別予測値",
-            color_continuous_scale='RdBu_r' # 他のグラフとカラースケールを合わせる
-        )
-        st.plotly_chart(fig_heatmap_item, use_container_width=True)
-
         # ---- AAA 計算処理 AAA ----
 
 
