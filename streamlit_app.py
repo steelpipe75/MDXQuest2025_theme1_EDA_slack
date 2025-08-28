@@ -183,6 +183,8 @@ def app(dev_mode):
         submit_df = pd.read_csv(submit_file, header=None)
         submit_df.columns = ['index', '予測']
 
+        submit_describe = submit_df['予測'].describe()
+
         work_df = pd.merge(test_df, submit_df)
         work_df = pd.merge(work_df, item_categories_df, on=['商品ID'], how='left')
         work_df = pd.merge(work_df, category_names_df, on=['商品カテゴリID'], how='left')
@@ -225,6 +227,8 @@ def app(dev_mode):
             color_continuous_scale='RdBu_r' # 他のグラフとカラースケールを合わせる
         )
         st.plotly_chart(fig_heatmap, use_container_width=True)
+
+        st.dataframe(submit_describe)
 
         # ---- AAA 計算処理 AAA ----
 
